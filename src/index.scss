@@ -40,6 +40,19 @@ body {
   background-color: #000000;
 }
 
+.page.event-page-theme {
+  background-color: #110a09;
+}
+
+.event-theme-root {
+  background-color: #110a09 !important;
+  
+  // Ensure any other blackish themes are overridden
+  * {
+    border-color: rgba(17, 10, 9, 0.5) !important;
+  }
+}
+
 .authpage {
   display: flex;
   flex-direction: column;

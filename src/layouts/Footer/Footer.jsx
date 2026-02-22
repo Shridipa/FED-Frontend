@@ -1,24 +1,26 @@
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { HashLink } from "react-router-hash-link";
 import {
   FaLinkedin,
   FaInstagram,
   FaYoutube,
-  FaTwitter,
-  FaMediumM,
 } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
+import PropTypes from "prop-types";
+import { useLocation, Link } from "react-router-dom";
+import { HashLink } from "react-router-hash-link";
 
 import styles from "./styles/Footer.module.scss";
 
-export default function Footer() {
+Footer.propTypes = {
+  isEventPage: PropTypes.bool,
+};
+
+export default function Footer({ isEventPage }) {
   const location = useLocation();
   const isOmega = location.pathname.includes("/Omega");
 
   return (
-    <section id={styles.footer}>
-      <footer className={styles.f1}>
+    <section id={styles.footer} className={isEventPage ? styles.eventFooter : ""}>
+      <footer className={`${styles.f1} ${isEventPage ? styles.eventF1 : ""}`}>
         <div className={styles.logodiv}>
           <img
             className={styles.fedlogo}

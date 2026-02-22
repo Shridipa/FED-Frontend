@@ -4,6 +4,10 @@
   background-color: rgba(30, 30, 30, 1);
   color: white;
   overflow-x: hidden;
+
+  &.eventF1 {
+    background-color: #110a09;
+  }
 }
 
 .logodiv {

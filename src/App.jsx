@@ -2,16 +2,14 @@ import { Suspense, lazy, useContext, useEffect } from "react";
 import { Routes, Route, Outlet, Navigate, useLocation } from "react-router-dom";
 
 // layouts
-import { Footer, Navbar, ProfileLayout } from "./layouts";
+import { Footer, Navbar } from "./layouts";
 
 // microInteraction
 import { Loading } from "./microInteraction";
 
 // modals
-import { EventModal } from "./features";
 
 //blog
-import FullBlog from "./pages/Blog/FullBlog";
 
 // state
 import AuthContext from "./context/AuthContext";
@@ -37,6 +35,7 @@ import {
 // Lazy loading pages
 const Home = lazy(() => import("./pages/Home/Home"));
 const Event = lazy(() => import("./pages/Event/Event"));
+const EventPage = lazy(() => import("./pages/Event/EventPage"));
 const PastEvent = lazy(() => import("./pages/Event/PastEvent"));
 const EventForm = lazy(() => import("./pages/Event/EventForm"));
 const Social = lazy(() => import("./pages/Social/Social"));
@@ -68,10 +67,13 @@ const AttendancePage = lazy(() => import('./pages/AttendancePage/AttendancePage'
 const MainLayout = () => {
   const location = useLocation();
   const isomegaPage = location.pathname === "/omega";
+  const isEventPage = location.pathname.toLowerCase().includes("/event/");
 
   useEffect(() => {
     if (isomegaPage) {
       document.body.style.backgroundColor = "#000000";
+    } else if (isEventPage) {
+      document.body.style.backgroundColor = "#110a09";
     } else {
       document.body.style.backgroundColor = "";
     }
@@ -79,15 +81,15 @@ const MainLayout = () => {
     return () => {
       document.body.style.backgroundColor = "";
     };
-  }, [isomegaPage]);
+  }, [isomegaPage, isEventPage]);
 
   return (
-    <div>
+    <div className={isEventPage ? 'event-theme-root' : ''}>
       <Navbar />
-      <div className={`page ${isomegaPage ? 'omega-page' : ''}`}>
+      <div className={`page ${isomegaPage ? 'omega-page' : ''} ${isEventPage ? 'event-page-theme' : ''}`}>
         <Outlet />
       </div>
-      <Footer />
+      <Footer isEventPage={isEventPage} />
     </div>
   );
 };
@@ -177,19 +179,19 @@ function App() {
 
                 <Route
                   path="events/:eventId"
-                  element={[<EventModal onClosePath="/profile/events" />]}
+                  element={<EventPage />}
                 />
                 {authCtx.user.access !== "USER" && (
                   <Route
                     path="events/Analytics/:eventId"
-                    element={[<EventStats onClosePath="/profile/events" />]}
+                    element={<EventStats onClosePath="/profile/events" />}
                   />
                 )}
                 {authCtx.user.access === "USER" &&
                   authCtx.user.email == "attendance@fedkiit.com" && (
                     <Route
                       path="events/Analytics/:eventId"
-                      element={[<EventStats onClosePath="/profile/events" />]}
+                      element={<EventStats onClosePath="/profile/events" />}
                     />
                   )}
                 <Route path="/profile/attendance" element={<AttendancePage />} />
@@ -197,23 +199,29 @@ function App() {
             )}
             <Route
               path="/Events/:eventId"
-              element={[<Event />, <EventModal onClosePath="/Events" />]}
+              element={<EventPage />}
             />
             <Route
               path="/Events/pastEvents/:eventId"
-              element={[<Event />, <EventModal onClosePath="/Events" />]}
+              element={<EventPage />}
             />
             <Route
               path="pastEvents/:eventId"
-              element={[
-                <PastEvent />,
-                <EventModal onClosePath="/Events/pastEvents" />,
-              ]}
+              element={<EventPage />}
             />
 
             <Route
               path="/Events/:eventId/Form"
-              element={[<Event />, <EventForm />]}
+              element={
+                <>
+                  <Event />
+                  <EventForm />
+                </>
+              }
+            />
+            <Route
+              path="/event/:eventId"
+              element={<EventPage />}
             />
 
             <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
