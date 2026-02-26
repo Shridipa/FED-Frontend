@@ -1,20 +1,27 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import styles from "./styles/LiveEventPopup.module.scss";
 import { api } from "../../../../services";
+import FormData from "../../../../data/FormData.json";
 
 const LiveEventPopup = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isEventOngoing, setIsEventOngoing] = useState(false);
   const [eventImage, setEventImage] = useState("");
+  const [eventId, setEventId] = useState("");
 
   useEffect(() => {
     const fetchEventData = async () => {
       try {
         const response = await api.get("/api/form/getAllForms");
-        const fetchedEvents = response.data;
+        let fetchedEvents = [];
 
-        const currentEvent = fetchedEvents.events.filter(
+        if (response.status === 200) {
+          fetchedEvents = response.data.events;
+        } else {
+          fetchedEvents = FormData.events;
+        }
+
+        const currentEvent = fetchedEvents.filter(
           (event) =>
             event.info.isEventPast === false &&
             event.info.isPublic === true &&
@@ -24,11 +31,11 @@ const LiveEventPopup = () => {
         if (currentEvent && !sessionStorage.getItem("popupDisplayed")) {
           setIsEventOngoing(true);
 
-          const today = new Date();
-          const endDate = new Date("2024-08-15");
           const imageUrl = currentEvent[0].info.eventImg;
+          const currentId = currentEvent[0].id;
 
           setEventImage(imageUrl);
+          setEventId(currentId);
 
           const timer = setTimeout(() => {
             setIsVisible(true);
@@ -73,7 +80,7 @@ const LiveEventPopup = () => {
             <button className={styles.closeButton} onClick={closePopup}>
               ×
             </button>
-            <a href="/Events">
+            <a href={`/Events/${eventId}`}>
               <img src={eventImage} alt="Event" className={styles.popupContent} />
             </a>
           </div>

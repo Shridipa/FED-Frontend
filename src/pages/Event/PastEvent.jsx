@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import style from "./styles/PastEvent.module.scss";
 import { EventCard } from "../../components";
@@ -12,6 +12,7 @@ const PastEvent = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const { events } = FormData;
+  const navigate = useNavigate();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -108,6 +109,7 @@ const PastEvent = () => {
                         >
                           <EventCard
                             data={event}
+                            onOpen={() => navigate(`/Events/pastEvents/${event.id}`)}
                             type="past"
                             customStyles={customStyles}
                             modalpath="/pastEvents/"

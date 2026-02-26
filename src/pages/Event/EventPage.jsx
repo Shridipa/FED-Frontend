@@ -18,6 +18,7 @@ import { parse, differenceInMilliseconds } from "date-fns";
 import shareOutline from "../../assets/images/shareOutline.svg";
 import Share from "../../features/Modals/Event/ShareModal/ShareModal";
 import ReactMarkdown from "react-markdown";
+import FormData from "../../data/FormData.json";
 
 const EventPage = () => {
   const navigate = useNavigate();
@@ -43,37 +44,44 @@ const EventPage = () => {
     const fetchEvent = async () => {
       try {
         const response = await api.get("/api/form/getAllForms");
+        let fetchedEvents = [];
+        
         if (response.status === 200) {
-          const fetchedEvents = response.data.events;
-          const ongoing = fetchedEvents.filter(
-            (event) => !event.info.isEventPast,
-          );
-          setOngoingEvents(ongoing);
+          fetchedEvents = response.data.events;
+        } else {
+          console.warn("API error, falling back to local events");
+          fetchedEvents = FormData.events;
+        }
 
-          const eventData = response.data?.events.find((e) => e.id === eventId);
+        const ongoing = fetchedEvents.filter((event) => !event.info.isEventPast);
+        setOngoingEvents(ongoing);
+
+        const eventData = fetchedEvents.find((e) => e.id === eventId);
+        if (eventData) {
           setData(eventData);
-          setInfo(eventData?.info || {});
-
-          if (eventData?.info) {
-            updateMetaTags(eventData.info);
-          }
+          setInfo(eventData.info || {});
+          if (eventData.info) updateMetaTags(eventData.info);
+          setAlert(null); // Clear any existing alerts if found
+        } else {
+          throw new Error("Event not found");
+        }
+      } catch (error) {
+        console.error("Error fetching event, using fallback:", error);
+        const eventData = FormData.events.find((e) => e.id === eventId);
+        if (eventData) {
+          setData(eventData);
+          setInfo(eventData.info || {});
+          const ongoing = FormData.events.filter((event) => !event.info.isEventPast);
+          setOngoingEvents(ongoing);
+          setAlert(null);
         } else {
           setAlert({
             type: "error",
-            message:
-              "There was an error fetching event details. Please try again.",
+            message: "Event not found even in local data.",
             position: "bottom-right",
             duration: 3000,
           });
         }
-      } catch (error) {
-        console.error("Error fetching event:", error);
-        setAlert({
-          type: "error",
-          message: "There was an error fetching event form. Please try again.",
-          position: "bottom-right",
-          duration: 3000,
-        });
       } finally {
         setIsLoading(false);
       }

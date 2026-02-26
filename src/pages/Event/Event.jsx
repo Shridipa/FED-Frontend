@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../../services";
 import style from "./styles/Event.module.scss";
 import AuthContext from "../../context/AuthContext";
@@ -17,7 +17,7 @@ const Event = () => {
   }, []);
 
   const authCtx = useContext(AuthContext);
-  const [eventData, setEventData] = useState([]);
+  const navigate = useNavigate();
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const { events } = FormData;
@@ -26,83 +26,91 @@ const Event = () => {
   const [ongoingEvents, setOngoingEvents] = useState([]);
   const [privateEvents, setPrivateEvents] = useState([]);
   const recoveryCtx = useContext(RecoveryContext);
-  const [isOngoingPublic, setIsOngoingPublic] = useState(false);
   const [isRegisteredInRelatedEvents, setIsRegisteredInRelatedEvents] =
     useState(false);
   const [eventName, setEventName] = useState("");
   const [parentEventCount, setParentEventCount] = useState([]);
 
   useEffect(() => {
-    if (recoveryCtx.teamCode && recoveryCtx.teamName || recoveryCtx.successMessage) {
+    if ((recoveryCtx.teamCode && recoveryCtx.teamName) || recoveryCtx.successMessage) {
       if (!isOpen) {
         setOpenModal(true);
       }
     }
-  }, [recoveryCtx.teamCode, recoveryCtx.successMessage]);
+  }, [recoveryCtx.teamCode, recoveryCtx.successMessage, recoveryCtx.teamName, isOpen]);
 
   useEffect(() => {
     const fetchEvents = async () => {
       try {
         const response = await api.get("/api/form/getAllForms");
+        let fetchedEvents = [];
+        
         if (response.status === 200) {
-          const fetchedEvents = response.data.events;
-          const sortedEvents = fetchedEvents.sort((a, b) => {
-            const priorityA = parseInt(a.info.eventPriority, 10);
-            const priorityB = parseInt(b.info.eventPriority, 10);
-            const dateA = new Date(a.info.eventDate);
-            const dateB = new Date(b.info.eventDate);
-            const titleA = a.info.eventTitle || "";
-            const titleB = b.info.eventTitle || "";
-
-            // compare by priority (lower priority first)
-            if (priorityA !== priorityB) {
-              return priorityA - priorityB;
-            }
-
-            // If priorities are the same, compare by date (earliest date first)
-            if (dateA.getTime() !== dateB.getTime()) {
-              return dateA.getTime() - dateB.getTime();
-            }
-
-            // If both priority and date are the same, compare alphabetically by title
-            return titleA.localeCompare(titleB);
-          });
-
-          // Separate ongoing and past events
-          const ongoing = sortedEvents.filter(
-            (event) => !event.info.isEventPast
-          );
-          const privateEvent = sortedEvents.filter(
-            (event) => !event.info.isPublic
-          );
-          const past = sortedEvents.filter((event) => event.info.isEventPast);
-          const sortedPastEvents = past.sort((a, b) => {
-            return new Date(b.info.eventDate) - new Date(a.info.eventDate);
-          });
-
-          // Set state with the sorted events
-          setOngoingEvents(ongoing);
-          setPastEvents(sortedPastEvents);
-          setPrivateEvents(privateEvent);
+          fetchedEvents = response.data.events;
         } else {
-          setError({
-            message:
-              "Sorry for the inconvenience, we are having issues fetching our Events",
-          });
+          console.warn("API returned non-200 status, falling back to local data");
+          fetchedEvents = events;
         }
-      } catch (error) {
-        setError({
-          message:
-            "Sorry for the inconvenience, we are having issues fetching our Events",
+
+        const sortedEvents = fetchedEvents.sort((a, b) => {
+          const priorityA = parseInt(a.info.eventPriority, 10);
+          const priorityB = parseInt(b.info.eventPriority, 10);
+          const dateA = new Date(a.info.eventDate);
+          const dateB = new Date(b.info.eventDate);
+          const titleA = a.info.eventTitle || "";
+          const titleB = b.info.eventTitle || "";
+
+          if (priorityA !== priorityB) {
+            return priorityA - priorityB;
+          }
+          if (dateA.getTime() !== dateB.getTime()) {
+            return dateA.getTime() - dateB.getTime();
+          }
+          return titleA.localeCompare(titleB);
         });
-        console.error("Error fetching events:", error);
+
+        // Separate ongoing and past events
+        const ongoing = sortedEvents.filter((event) => !event.info.isEventPast);
+        const privateEvent = sortedEvents.filter((event) => !event.info.isPublic);
+        const past = sortedEvents.filter((event) => event.info.isEventPast);
+        const sortedPastEvents = past.sort((a, b) => {
+          return new Date(b.info.eventDate) - new Date(a.info.eventDate);
+        });
+
+        setOngoingEvents(ongoing);
+        setPastEvents(sortedPastEvents);
+        setPrivateEvents(privateEvent);
+        setError(null);
+      } catch (error) {
+        console.error("Error fetching events, using fallback:", error);
+        // Fallback to local JSON data
+        const sortedEvents = events.sort((a, b) => {
+          const dateA = new Date(a.info.eventDate);
+          const dateB = new Date(b.info.eventDate);
+          return dateA.getTime() - dateB.getTime();
+        });
+
+        // Use isPublic: true as a preference, but if none are found, show all ongoing
+        let ongoing = sortedEvents.filter((event) => !event.info.isEventPast && event.info.isPublic);
+        if (ongoing.length === 0) {
+          ongoing = sortedEvents.filter((event) => !event.info.isEventPast);
+        }
+
+        const past = sortedEvents.filter((event) => event.info.isEventPast);
+        const sortedPastEvents = past.sort((a, b) => {
+          return new Date(b.info.eventDate) - new Date(a.info.eventDate);
+        });
+
+        setOngoingEvents(ongoing);
+        setPastEvents(sortedPastEvents);
+        setError(null); // Clear error since we have fallback data
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchEvents();
-  }, []);
+  }, [events]);
 
   const handleShare = () => {
     if (recoveryCtx.teamCode && recoveryCtx.teamName || recoveryCtx.successMessage) { //if error comes put recoveryCtx.successMessage in or and setSuccessMessage(null)
@@ -115,11 +123,6 @@ const Event = () => {
   };
 
   useEffect(() => {
-    const hasPublicOngoingEvent = ongoingEvents.some(
-      (event) => event.info.isPublic
-    );
-    setIsOngoingPublic(hasPublicOngoingEvent);
-
     const eventWithNullRelated = ongoingEvents.find(
       (event) => event.info.relatedEvent === "null"
     );
@@ -155,7 +158,7 @@ const Event = () => {
     if (isRegisteredInRelatedEvents) {
       setIsRegisteredInRelatedEvents(true);
     }
-  }, [ongoingEvents, authCtx.user.regForm]);
+  }, [ongoingEvents, authCtx.user.regForm, events]);
 
   const customStyles = {
     eventname: {
@@ -225,22 +228,17 @@ const Event = () => {
               <div className={style.eventwhole}>
 
                 <>
-                  {ongoingEvents.length > 0 && (
-                    <div className={style.eventcard}>
-                      {isOngoingPublic ? (
+                      <div className={style.eventcard}>
                         <div
                           className={style.name}
                           style={{ marginBottom: "-1rem" }}
                         >
                           <img className={style.ring1} src={ring} alt="ring" />
 
-                          <span className={style.w1}>Ongoing</span>
-                          <span className={style.w2}>Events</span><br />
+                          <span className={style.w1}>Upcoming</span>
+                          <span className={style.w2}>Event</span><br />
 
                         </div>
-                      ) : (
-                        <div> </div>
-                      )}
                       {!isRegisteredInRelatedEvents && parentEventCount == 0 &&
                         authCtx.isLoggedIn &&
                         authCtx.user.access === "USER" && (
@@ -263,31 +261,28 @@ const Event = () => {
                           </div>
                         )}
                       <div className={style.cardsin}>
-                        {ongoingEvents.map((event, index) =>
-                          event.info.isPublic ? (
-                            <div
-                              style={{ height: "auto", width: "22rem" }}
-                              key={index}
-                            >
-                              <EventCard
-                                data={event}
-                                onOpen={() => console.log("Event opened")}
-                                type="ongoing"
-                                customStyles={customStyles}
-                                modalpath="/Events/"
-                                aosDisable={false}
-                                isLoading={isLoading}
-                                isRegisteredInRelatedEvents={
-                                  isRegisteredInRelatedEvents
-                                }
-                                eventName={eventName}
-                              />
-                            </div>
-                          ) : null
-                        )}
+                        {ongoingEvents.slice(0, 1).map((event, index) => (
+                          <div
+                            style={{ height: "auto", width: "22rem" }}
+                            key={index}
+                          >
+                            <EventCard
+                              data={event}
+                              onOpen={() => navigate(`/Events/${event.id}`)}
+                              type="ongoing"
+                              customStyles={customStyles}
+                              modalpath="/Events/"
+                              aosDisable={false}
+                              isLoading={isLoading}
+                              isRegisteredInRelatedEvents={
+                                isRegisteredInRelatedEvents
+                              }
+                              eventName={eventName}
+                            />
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  )}
                   <div
                     className={style.pasteventcard}
                     style={{
