@@ -474,26 +474,6 @@ const EventPage = () => {
 
           <div className={styles.section}>
             <h2>
-              <PiMapPinAreaDuotone /> Location & Venue
-            </h2>
-            <div className={styles.locationWrapper}>
-              <div className={styles.locationInfo}>
-                <div className={styles.locationItem}>
-                  <strong>Venue</strong>
-                  <p>{info.venue || "KIIT University, Bhubaneswar"}</p>
-                </div>
-                <div className={styles.locationSeparator}></div>
-                <div className={styles.locationItem}>
-                  <strong>Address</strong>
-                  <p>{info.address || "Patia, Bhubaneswar, Odisha 751024"}</p>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          <div className={styles.section}>
-            <h2>
               <PiQuestionDuotone /> Frequently Asked Questions
             </h2>
             <div className={styles.faqList}>
@@ -599,6 +579,17 @@ const EventPage = () => {
                 <img src={shareOutline} alt="Share" /> Share this Event
               </button>
             )}
+          </div>
+
+          <div className={styles.locationInfo}>
+            <div className={styles.locationItem}>
+              <strong>Venue</strong>
+              <p>{info.venue || "KIIT University, Bhubaneswar"}</p>
+            </div>
+            <div className={styles.locationItem}>
+              <strong>Address</strong>
+              <p>{info.address || "Patia, Bhubaneswar, Odisha 751024"}</p>
+            </div>
           </div>
 
           <div className={styles.hostedByCard}>
