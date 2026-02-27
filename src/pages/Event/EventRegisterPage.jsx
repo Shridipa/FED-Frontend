@@ -4,7 +4,7 @@ import PreviewForm from "../../features/Modals/Profile/Admin/PreviewForm";
 import { api } from "../../services";
 import { Alert } from "../../microInteraction";
 
-const EventForm = () => {
+const EventRegisterPage = () => {
   const [showPreview, setShowPreview] = useState(true);
   const [eventData, setEventData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -80,4 +80,4 @@ const EventForm = () => {
   );
 };
 
-export default EventForm;
+export default EventRegisterPage;

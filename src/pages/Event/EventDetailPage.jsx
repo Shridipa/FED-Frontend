@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext, useCallback } from "react";
-import styles from "./styles/EventPage.module.scss";
+import styles from "./styles/EventDetailPage.module.scss";
 import { useNavigate, useParams } from "react-router-dom";
 import { MdGroups } from "react-icons/md";
 import { IoIosLock, IoMdInformationCircleOutline } from "react-icons/io";
@@ -20,7 +20,7 @@ import Share from "../../features/Modals/Event/ShareModal/ShareModal";
 import ReactMarkdown from "react-markdown";
 import FormData from "../../data/FormData.json";
 
-const EventPage = () => {
+const EventDetailPage = () => {
   const navigate = useNavigate();
   const { eventId } = useParams();
   const authCtx = useContext(AuthContext);
@@ -632,4 +632,4 @@ const EventPage = () => {
   );
 };
 
-export default EventPage;
+export default EventDetailPage;

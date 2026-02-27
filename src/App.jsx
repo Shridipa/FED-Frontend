@@ -35,9 +35,9 @@ import {
 // Lazy loading pages
 const Home = lazy(() => import("./pages/Home/Home"));
 const Event = lazy(() => import("./pages/Event/Event"));
-const EventPage = lazy(() => import("./pages/Event/EventPage"));
+const EventDetailPage = lazy(() => import("./pages/Event/EventDetailPage"));
 const PastEvent = lazy(() => import("./pages/Event/PastEvent"));
-const EventForm = lazy(() => import("./pages/Event/EventForm"));
+const EventRegisterPage = lazy(() => import("./pages/Event/EventRegisterPage"));
 const Social = lazy(() => import("./pages/Social/Social"));
 const Team = lazy(() => import("./pages/Team/Team"));
 const Alumni = lazy(() => import("./pages/Alumni/Alumni"));
@@ -179,7 +179,7 @@ function App() {
 
                 <Route
                   path="events/:eventId"
-                  element={<EventPage />}
+                  element={<EventDetailPage />}
                 />
                 {authCtx.user.access !== "USER" && (
                   <Route
@@ -199,15 +199,15 @@ function App() {
             )}
             <Route
               path="/Events/:eventId"
-              element={<EventPage />}
+              element={<EventDetailPage />}
             />
             <Route
               path="/Events/pastEvents/:eventId"
-              element={<EventPage />}
+              element={<EventDetailPage />}
             />
             <Route
               path="pastEvents/:eventId"
-              element={<EventPage />}
+              element={<EventDetailPage />}
             />
 
             <Route
@@ -215,13 +215,13 @@ function App() {
               element={
                 <>
                   <Event />
-                  <EventForm />
+                  <EventRegisterPage />
                 </>
               }
             />
             <Route
               path="/event/:eventId"
-              element={<EventPage />}
+              element={<EventDetailPage />}
             />
 
             <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />

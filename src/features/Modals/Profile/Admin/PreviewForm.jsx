@@ -1,4 +1,5 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import PropTypes from "prop-types";
 import styles from "./styles/Preview.module.scss";
 import AuthContext from "../../../../context/AuthContext";
 import { Button, Text } from "../../../../components";
@@ -50,10 +51,8 @@ const PreviewForm = ({
   const wrapperRef = useRef(null);
   const recoveryCtx = useContext(RecoveryContext);
   const { setTeamCode, setTeamName, setSuccessMessage } = recoveryCtx;
-  const [formData, setFormData] = useState(eventData);
   const [code, setcode] = useState(null);
   const [team, setTeam] = useState(null);
-  const [message, setMessage] = useState(null);
 
   let currentSection =
     data !== undefined
@@ -80,7 +79,7 @@ const PreviewForm = ({
 
   useEffect(() => {
     constructSections();
-  }, [sections]);
+  }, [constructSections]);
 
   useEffect(() => {
     if (alert) {
@@ -90,11 +89,11 @@ const PreviewForm = ({
     }
   }, [alert]);
 
-  const constructSections = () => {
-    const newSections = data.map((section) => {
+  const constructSections = useCallback(() => {
+    const newSections = sections.map((section) => {
       return {
         ...section,
-        isDisabled: section._id !== data[0]._id,
+        isDisabled: section._id !== sections[0]?._id,
         fields: section.fields.map((field) => {
           return {
             ...field,
@@ -105,7 +104,7 @@ const PreviewForm = ({
     });
     setdata(newSections);
     setactiveSection(newSections[0]);
-  };
+  }, [sections]);
 
   const handleChange = (field, value) => {
     const updatedSections = data.map((section) => {
@@ -165,7 +164,7 @@ const PreviewForm = ({
     if (isSuccess) {
       const participationType = eventData?.participationType;
       const successMessage = eventData?.successMessage;
-      console.log(participationType);
+      
       const handleAutoClose = () => {
         setTimeout(() => {
           if (participationType === "Team") {
@@ -181,7 +180,7 @@ const PreviewForm = ({
 
       handleAutoClose();
     }
-  }, [isSuccess, navigate]);
+  }, [isSuccess, navigate, eventData, code, team, setTeamCode, setTeamName, setSuccessMessage]);
 
   const areRequiredFieldsFilled = () => {
     let isFilled = {
@@ -413,14 +412,10 @@ const PreviewForm = ({
           const { teamName, teamCode } = response.data;
 
           const participationType = eventData?.participationType;
-          const successMessage = eventData?.successMessage;
           if (participationType === "Team") {
             setTeam(teamName);
             setcode(teamCode);
             // console.log("saved context teamCode:",recoveryCtx.teamCode)
-          }
-          if (successMessage) {
-            setMessage(successMessage);
           }
           // console.log("consoling teamdata:", teamName, teamCode);
         }
@@ -485,7 +480,7 @@ const PreviewForm = ({
   };
 
   const renderPaymentScreen = () => {
-  const { eventType, receiverDetails, eventAmount } = formData;
+  const { eventType, receiverDetails, eventAmount } = eventData;
 
   const handleDownloadQR = async () => {
     try {
@@ -586,7 +581,7 @@ const PreviewForm = ({
 
   return (
     <>
-      open && (
+      {open && (
       <div className={styles.mainPreview}>
         <div className={styles.previewContainerWrapper}>
           <div ref={wrapperRef} className={styles.previewContainer}>
@@ -732,9 +727,32 @@ const PreviewForm = ({
           </div>
         </div>
       </div>
-      )
+      )}
       <Alert />
     </>
   );
 };
+PreviewForm.propTypes = {
+  isEditing: PropTypes.bool,
+  eventData: PropTypes.shape({
+    participationType: PropTypes.string,
+    successMessage: PropTypes.string,
+    eventTitle: PropTypes.string,
+    eventType: PropTypes.string,
+    eventAmount: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    receiverDetails: PropTypes.shape({
+      media: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+      upi: PropTypes.string,
+    }),
+  }),
+  form: PropTypes.shape({
+    id: PropTypes.string,
+  }),
+  sections: PropTypes.arrayOf(PropTypes.object),
+  open: PropTypes.bool.isRequired,
+  meta: PropTypes.arrayOf(PropTypes.object),
+  handleClose: PropTypes.func,
+  showCloseBtn: PropTypes.bool,
+};
+
 export default PreviewForm;
