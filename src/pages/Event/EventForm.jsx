@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import FormData from "../../data/FormData.json";
 import PreviewForm from "../../features/Modals/Profile/Admin/PreviewForm";
 import { api } from "../../services";
 import { Alert } from "../../microInteraction";
@@ -12,9 +11,6 @@ const EventForm = () => {
   const [alert, setAlert] = useState(null);
   const { eventId } = useParams();
 
-  // Ensure eventId is correctly parsed
-  const id = eventId;
-  // console.log("event id in eventForm is :",id);
 
   useEffect(() => {
     if (alert) {
@@ -53,7 +49,7 @@ const EventForm = () => {
     };
 
     fetchEvent();
-  }, [id]);
+  }, [eventId]);
   // console.log("eventData",eventData);
 
   // Add scroll lock effect when form opens
